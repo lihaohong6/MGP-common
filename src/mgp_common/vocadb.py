@@ -3,14 +3,12 @@ import pickle
 import re
 from dataclasses import dataclass, field
 from datetime import datetime
-from textwrap import indent
 
 import requests
 
 import video
 from config import get_cache_path
-from japanese import is_japanese
-from string_utils import is_empty, auto_lj
+from string_utils import is_empty
 from video import Video, VideoSite, video_from_site
 
 

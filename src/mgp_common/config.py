@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Union
 
-cache_path = Path("cache")
+cache_path = Path("../../cache")
 
 
 def set_cache_path(path: Union[str, Path]):
