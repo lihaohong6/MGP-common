@@ -87,7 +87,7 @@ def get_producer_songs(producer_id: str) -> list[Song]:
     return result
 
 
-def get_producer_albums(producer_id: str) -> list[str]:
+def get_producer_albums(producer_id: str, only_main: bool = True) -> list[str]:
     start = 0
     max_results = 50
     result = []
@@ -99,7 +99,7 @@ def get_producer_albums(producer_id: str) -> list[str]:
             'maxResults': max_results,
             'sort': 'ReleaseDate',
             'artistId[]': producer_id,
-            'artistParticipationStatus': 'Everything'
+            'artistParticipationStatus': 'OnlyMainAlbums' if only_main else 'Everything'
         }).json()
         for album in response['items']:
             result.append(album['defaultName'])
