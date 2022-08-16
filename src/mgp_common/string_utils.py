@@ -1,4 +1,4 @@
-from japanese import is_kana, is_kanji, is_japanese
+from mgp_common.japanese import is_japanese
 
 
 def is_empty(s: str) -> bool:

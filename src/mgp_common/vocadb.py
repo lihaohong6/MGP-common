@@ -6,10 +6,10 @@ from datetime import datetime
 
 import requests
 
-import video
-from config import get_cache_path
-from string_utils import is_empty
-from video import Video, VideoSite, video_from_site
+import mgp_common.video
+from mgp_common.config import get_cache_path
+from mgp_common.string_utils import is_empty
+from mgp_common.video import Video, VideoSite, video_from_site
 
 
 @dataclass
@@ -51,7 +51,7 @@ def get_song_by_id(song_id: str, load_videos: bool = True) -> Song:
     name_ja = response['song']['defaultName']
     additional_names = [n for n in re.split(", *", response['additionalNames'])
                         if not is_empty(n)]
-    publish_date = video.str_to_date(response['song'].get('publishDate', ""))
+    publish_date = mgp_common.video.str_to_date(response['song'].get('publishDate', ""))
     original = response['song']['songType'] == 'Original'
     videos = parse_videos(response['pvs'], load_videos)
     albums = parse_albums(response['albums'])
