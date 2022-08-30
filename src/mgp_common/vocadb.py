@@ -3,6 +3,7 @@ import pickle
 import re
 from dataclasses import dataclass, field
 from datetime import datetime
+from typing import List
 
 import requests
 
@@ -15,14 +16,15 @@ from mgp_common.video import Video, VideoSite, video_from_site
 @dataclass
 class Song:
     name_ja: str
-    name_other: list[str] = field(default_factory=list)
+    name_chs: str = None
+    name_other: List[str] = field(default_factory=list)
     original: bool = True
     publish_date: datetime = None
-    videos: list[Video] = field(default_factory=list)
-    albums: list[str] = field(default_factory=list)
+    videos: List[Video] = field(default_factory=list)
+    albums: List[str] = field(default_factory=list)
 
 
-def parse_videos(videos: list, load_videos: bool = True) -> list[Video]:
+def parse_videos(videos: list, load_videos: bool = True) -> List[Video]:
     service_to_site: dict = {
         'NicoNicoDouga': VideoSite.NICO_NICO,
         'Youtube': VideoSite.YOUTUBE
@@ -41,7 +43,7 @@ def parse_videos(videos: list, load_videos: bool = True) -> list[Video]:
     return result
 
 
-def parse_albums(albums: list) -> list[str]:
+def parse_albums(albums: list) -> List[str]:
     return [a['defaultName'] for a in albums]
 
 
@@ -60,7 +62,7 @@ def get_song_by_id(song_id: str, load_videos: bool = True) -> Song:
                 videos=videos, albums=albums)
 
 
-def get_producer_songs(producer_id: str) -> list[Song]:
+def get_producer_songs(producer_id: str) -> List[Song]:
     path = get_cache_path().joinpath("producer_songs_" + producer_id + ".pickle")
     if not path.exists():
         start = 0
@@ -87,7 +89,7 @@ def get_producer_songs(producer_id: str) -> list[Song]:
     return result
 
 
-def get_producer_albums(producer_id: str, only_main: bool = True) -> list[str]:
+def get_producer_albums(producer_id: str, only_main: bool = True, only_original: bool = True) -> List[str]:
     start = 0
     max_results = 50
     result = []
@@ -99,7 +101,8 @@ def get_producer_albums(producer_id: str, only_main: bool = True) -> list[str]:
             'maxResults': max_results,
             'sort': 'ReleaseDate',
             'artistId[]': producer_id,
-            'artistParticipationStatus': 'OnlyMainAlbums' if only_main else 'Everything'
+            'artistParticipationStatus': 'OnlyMainAlbums' if only_main else 'Everything',
+            'discType': 'Album' if only_original else 'Unknown'
         }).json()
         for album in response['items']:
             result.append(album['defaultName'])
