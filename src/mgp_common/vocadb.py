@@ -3,7 +3,7 @@ import pickle
 import re
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import List
+from typing import List, Dict, Optional
 
 import requests
 
@@ -22,6 +22,7 @@ class Song:
     publish_date: datetime = None
     videos: List[Video] = field(default_factory=list)
     albums: List[str] = field(default_factory=list)
+    creators: Dict[str, List[str]] = field(default_factory=dict)
 
 
 def parse_videos(videos: list, load_videos: bool = True) -> List[Video]:
@@ -47,6 +48,82 @@ def parse_albums(albums: list) -> List[str]:
     return [a['defaultName'] for a in albums]
 
 
+vocaloid_names = {
+    '初音ミク': "初音未来",
+    '鏡音リン': "镜音铃",
+    '鏡音レン': "镜音连",
+    '巡音ルカ': "巡音流歌",
+    'カイト': "KAITO",
+    'メイコ': "MEIKO",
+    '音街ウナ': "音街鳗",
+    '歌愛ユキ': "歌爱雪",
+    '結月ゆかり': "结月缘",
+    '神威がくぽ': "神威乐步",
+    'ブイフラワ': "v flower",
+    'イア': "IA",
+    'マユ': "MAYU",
+    'GUMI': "GUMI",
+    'ふかせ': "Fukase",
+    'ギャラ子': 'Galaco',
+    '心華': "心华",
+    "紲星あかり": "绁星灯",
+    '重音テト': "重音Teto",
+    '鳴花ヒメ': '鸣花姬',
+    '鳴花ミコト': '鸣花尊',
+    '시유': 'SeeU',
+    'Eleanor Forte': '爱莲娜·芙缇',
+    'KAFU': '可不',
+    'SeKai': '星界'
+}
+
+
+def name_shorten(name: str) -> str:
+    for n in vocaloid_names.keys():
+        if n in name:
+            return n
+    return name
+
+
+def split_names(regex: str = "[・/，, ]+", text: str = "") -> List[str]:
+    return re.split(regex, text)
+
+
+def parse_creators(artists: Optional[list], artist_string: Optional[list]) -> Dict[str, List[str]]:
+    if artists is None:
+        artists =[]
+    if artist_string is None:
+        artist_string = "feat."
+    mapping: Dict[str, List[str]] = {}
+    for artist in artists:
+        if 'artist' in artist:
+            name = artist['artist']['name']
+            if artist['artist']['artistType'] == 'Vocaloid':
+                # shorten names like 初音ミク V4X
+                name = name_shorten(name)
+        else:
+            name = artist['name']
+        roles = artist['roles']
+        if roles == 'Default':
+            roles = artist['categories']
+        if roles == 'Other':
+            continue
+        roles = split_names(text=roles)
+        name = name.strip()
+        for role in roles:
+            role = role.strip()
+            if role in mapping:
+                mapping[role].append(name)
+            else:
+                mapping[role] = [name]
+    if "Vocalist" not in mapping:
+        names = split_names(text=artist_string.split("feat.")[1])
+        mapping['Vocalist'] = [name_shorten(n.strip()) for n in names if not is_empty(n)]
+    if "Producer" not in mapping:
+        names = split_names(text=artist_string.split("feat.")[0])
+        mapping['Producer'] = [n.strip() for n in names if not is_empty(n)]
+    return mapping
+
+
 def get_song_by_id(song_id: str, load_videos: bool = True) -> Song:
     url = f"https://vocadb.net/api/songs/{song_id}/details"
     response = json.loads(requests.get(url).text)
@@ -57,9 +134,10 @@ def get_song_by_id(song_id: str, load_videos: bool = True) -> Song:
     original = response['song']['songType'] == 'Original'
     videos = parse_videos(response['pvs'], load_videos)
     albums = parse_albums(response['albums'])
+    creators = parse_creators(response['artists'], response['artistString'])
     return Song(name_ja=name_ja, name_other=additional_names,
                 original=original, publish_date=publish_date,
-                videos=videos, albums=albums)
+                videos=videos, albums=albums, creators=creators)
 
 
 def get_producer_songs(producer_id: str) -> List[Song]:
