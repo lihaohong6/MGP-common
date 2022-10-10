@@ -9,6 +9,9 @@ import requests
 from bs4 import BeautifulSoup
 
 
+DEFAULT_TIME = datetime.now() + timedelta(days=1000)
+
+
 class VideoSite(Enum):
     NICO_NICO = "niconico"
     BILIBILI = "bilibili"
@@ -21,7 +24,7 @@ class Video:
     identifier: str = None
     url: str = None
     views: int = 0
-    uploaded: datetime = datetime.now() + timedelta(days=1000)
+    uploaded: datetime = DEFAULT_TIME
     thumb_url: str = None
     canonical = True
 
@@ -69,7 +72,7 @@ def get_nc_info(vid: str) -> Video:
     url = f"https://www.nicovideo.jp/watch/{vid}"
     result = requests.get(url).text
     soup = BeautifulSoup(result, "html.parser")
-    date = datetime.fromtimestamp(0)
+    date = DEFAULT_TIME
     views = 0
     for script in soup.find_all('script'):
         t: str = script.get_text()
