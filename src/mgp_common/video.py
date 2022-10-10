@@ -1,7 +1,7 @@
 import json
 import logging
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import Enum
 from typing import Optional
 
@@ -21,7 +21,7 @@ class Video:
     identifier: str = None
     url: str = None
     views: int = 0
-    uploaded: datetime = datetime.fromtimestamp(0)
+    uploaded: datetime = datetime.now() + timedelta(days=1000)
     thumb_url: str = None
     canonical = True
 

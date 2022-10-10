@@ -2,7 +2,7 @@ import json
 import pickle
 import re
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Dict, Optional
 
 import requests
@@ -19,7 +19,7 @@ class Song:
     name_chs: str = None
     name_other: List[str] = field(default_factory=list)
     original: bool = True
-    publish_date: datetime = None
+    publish_date: datetime = datetime.now() + timedelta(days=1000)
     videos: List[Video] = field(default_factory=list)
     albums: List[str] = field(default_factory=list)
     creators: Dict[str, List[str]] = field(default_factory=dict)
@@ -131,8 +131,13 @@ def get_song_by_id(song_id: str, load_videos: bool = True) -> Song:
     additional_names = [n for n in re.split(", *", response['additionalNames'])
                         if not is_empty(n)]
     publish_date = mgp_common.video.str_to_date(response['song'].get('publishDate', ""))
+    if publish_date is None:
+        publish_date = datetime.now() + timedelta(days=1000)
     original = response['song']['songType'] == 'Original'
     videos = parse_videos(response['pvs'], load_videos)
+    for v in videos:
+        if v.uploaded is not None and v.uploaded < publish_date:
+            publish_date = v.uploaded
     albums = parse_albums(response['albums'])
     creators = parse_creators(response['artists'], response['artistString'])
     return Song(name_ja=name_ja, name_other=additional_names,
@@ -140,7 +145,7 @@ def get_song_by_id(song_id: str, load_videos: bool = True) -> Song:
                 videos=videos, albums=albums, creators=creators)
 
 
-def get_producer_songs(producer_id: str) -> List[Song]:
+def get_producer_songs(producer_id: str, load_videos: bool = False) -> List[Song]:
     path = get_cache_path().joinpath("producer_songs_" + producer_id + ".pickle")
     if not path.exists():
         start = 0
@@ -158,7 +163,7 @@ def get_producer_songs(producer_id: str) -> List[Song]:
             })
             items = response.json()['items']
             for item in items:
-                result.append(get_song_by_id(item['id'], load_videos=False))
+                result.append(get_song_by_id(item['id'], load_videos))
             if len(items) < max_results:
                 break
             start += max_results
