@@ -88,10 +88,10 @@ def split_names(regex: str = "[・/，, ]+", text: str = "") -> List[str]:
     return re.split(regex, text)
 
 
-def parse_creators(artists: Optional[list], artist_string: Optional[list]) -> Dict[str, List[str]]:
+def parse_creators(artists: Optional[list], artist_string: Optional[str]) -> Dict[str, List[str]]:
     if artists is None:
-        artists =[]
-    if artist_string is None:
+        artists = []
+    if is_empty(artist_string) or len(split_names(text=artist_string)) != 2:
         artist_string = "feat."
     mapping: Dict[str, List[str]] = {}
     for artist in artists:
