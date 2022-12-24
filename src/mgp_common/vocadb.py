@@ -115,11 +115,12 @@ def parse_creators(artists: Optional[list], artist_string: Optional[str]) -> Dic
                 mapping[role].append(name)
             else:
                 mapping[role] = [name]
-    if "Vocalist" not in mapping:
-        names = split_names(text=artist_string.split("feat.")[1])
+    feat_split = artist_string.split("feat.")
+    if "Vocalist" not in mapping and len(feat_split) > 1:
+        names = split_names(text=feat_split[1])
         mapping['Vocalist'] = [name_shorten(n.strip()) for n in names if not is_empty(n)]
     if "Producer" not in mapping:
-        names = split_names(text=artist_string.split("feat.")[0])
+        names = split_names(text=feat_split[0])
         mapping['Producer'] = [n.strip() for n in names if not is_empty(n)]
     return mapping
 

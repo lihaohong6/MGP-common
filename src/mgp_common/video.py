@@ -131,6 +131,7 @@ info_func = {
 
 
 def video_from_site(site: VideoSite, identifier: str, canonical: bool = True) -> Optional[Video]:
+    identifier = identifier.strip()
     try:
         v = info_func[site](identifier)
     except Exception as e:
