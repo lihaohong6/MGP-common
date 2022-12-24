@@ -186,7 +186,7 @@ def get_producer_albums(producer_id: str, only_main: bool = True, only_original:
             'sort': 'ReleaseDate',
             'artistId[]': producer_id,
             'artistParticipationStatus': 'OnlyMainAlbums' if only_main else 'Everything',
-            'discType': 'Album' if only_original else 'Unknown'
+            'discTypes': 'Album' if only_original else 'Unknown'
         }).json()
         for album in response['items']:
             result.append(album['defaultName'])
